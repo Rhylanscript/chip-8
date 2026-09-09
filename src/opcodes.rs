@@ -132,6 +132,23 @@ impl Cpu {
                 let collision = self.display.draw_sprite(vx, vy, &sprite_data);
                 self.v[0xF] = collision as u8;
             }
+            0xF000 => match opcode & 0x00FF {
+                0x07 => {
+                    // FX07: VX = current delay timer value
+                    self.v[x] = self.delay_timer;
+                }
+                0x15 => {
+                    // FX15: delay timer = VX
+                    self.delay_timer = self.v[x];
+                }
+                0x18 => {
+                    // FX18: sound timer = VX
+                    self.sound_timer = self.v[x];
+                }
+                _ => {
+                    println!("Unimplemented 0xF000-family opcode: {opcode:#06X}");
+                }
+            },
             _ => {
                 // not implemented yet
                 println!("Unimplemented opcode: {opcode:#06X}");
