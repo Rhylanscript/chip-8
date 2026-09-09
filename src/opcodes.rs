@@ -10,7 +10,7 @@ impl Cpu {
             0x0000 => {
                 if opcode == 0x00E0 {
                     // 00E0: clear screen
-                    println!("Clear screen (not implemented yet)");
+                    self.display.clear();
                 }
             }
             0x1000 => {
@@ -29,6 +29,20 @@ impl Cpu {
             0xA000 => {
                 // ANNN: set idx reg I to addr NNN
                 self.i = nnn;
+            }
+            0xD000 => {
+                // DXYN: draw an N tall sprite from addr I at (VX, VY)
+                let n = (opcode & 0x000F) as usize;
+                let vx = self.v[x] as usize;
+                let vy = self.v[((opcode & 0x00F0) >> 4) as usize] as usize;
+
+                let mut sprite_data = Vec::new();
+                for row in 0..n {
+                    sprite_data.push(self.memory.read(self.i as usize + row));
+                }
+
+                let collision = self.display.draw_sprite(vx, vy, &sprite_data);
+                self.v[0xF] = collision as u8;
             }
             _ => {
                 // not implemented yet
