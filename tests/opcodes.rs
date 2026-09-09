@@ -184,6 +184,30 @@ fn opcode_annn_sets_index_register() {
 }
 
 #[test]
+fn opcode_fx07_reads_delay_timer_into_register() {
+    let mut cpu = Cpu::new();
+    cpu.delay_timer = 42;
+    cpu.execute(0xF007);
+    assert_eq!(cpu.v[0], 42);
+}
+
+#[test]
+fn opcode_fx15_sets_delay_timer_from_register() {
+    let mut cpu = Cpu::new();
+    cpu.v[0] = 42;
+    cpu.execute(0xF015);
+    assert_eq!(cpu.delay_timer, 42);
+}
+
+#[test]
+fn opcode_fx18_sets_sound_timer_from_register() {
+    let mut cpu = Cpu::new();
+    cpu.v[0] = 30;
+    cpu.execute(0xF018);
+    assert_eq!(cpu.sound_timer, 30);
+}
+
+#[test]
 fn nested_calls_use_stack_correctly() {
     let mut cpu = Cpu::new();
     let start = cpu.pc;
@@ -201,4 +225,19 @@ fn nested_calls_use_stack_correctly() {
     cpu.execute(0x00EE);
     assert_eq!(cpu.pc, start);
     assert_eq!(cpu.sp, 0);
+}
+
+#[test]
+fn tick_timers_counts_down_but_stops_at_zero() {
+    let mut cpu = Cpu::new();
+    cpu.delay_timer = 2;
+
+    cpu.tick_timers();
+    assert_eq!(cpu.delay_timer, 1);
+
+    cpu.tick_timers();
+    assert_eq!(cpu.delay_timer, 0);
+
+    cpu.tick_timers();
+    assert_eq!(cpu.delay_timer, 0);
 }
