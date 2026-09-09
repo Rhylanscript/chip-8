@@ -30,4 +30,12 @@ impl Cpu {
     pub fn load_rom(&mut self, rom_data: &[u8]) {
         self.memory.load_rom(rom_data);
     }
+
+    pub fn cycle(&mut self) {
+        let high_byte = self.memory.read(self.pc as usize);
+        let low_byte = self.memory.read(self.pc as usize + 1);
+        let opcode = ((high_byte as u16) << 8) | (low_byte as u16);
+
+        self.execute(opcode);
+    }
 }
