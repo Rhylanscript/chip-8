@@ -3,6 +3,7 @@ use crate::cpu::Cpu;
 impl Cpu {
     pub fn execute(&mut self, opcode: u16) {
         let x = ((opcode & 0x0F00) >> 8) as usize;
+        let y = ((opcode & 0x00F0) >> 4) as usize;
         let nn = (opcode & 0x00FF) as u8;
         let nnn = opcode & 0x0FFF;
 
@@ -20,16 +21,21 @@ impl Cpu {
             }
             0x3000 => {
                 // 3XNN: skip if VX == NN
-                if self.v[x] == nn { self.pc += 2; }
+                if self.v[x] == nn {
+                    self.pc += 2;
+                }
             }
             0x4000 => {
                 // 4XNN: skip if VX != NN
-                if self.v[x] != nn { self.pc += 2; }
+                if self.v[x] != nn {
+                    self.pc += 2;
+                }
             }
             0x5000 => {
                 // 5XY0: skip if VX == VY
-                let y = ((opcode & 0x00F0) >> 4) as usize;
-                if self.v[x] == self.v[y] { self.pc += 2; }
+                if self.v[x] == self.v[y] {
+                    self.pc += 2;
+                }
             }
             0x6000 => {
                 // 6XNN: set reg VX to NN
@@ -39,10 +45,62 @@ impl Cpu {
                 // 7XNN: add NN to reg VX
                 self.v[x] = self.v[x].wrapping_add(nn);
             }
+            0x8000 => match opcode & 0x000F {
+                0x0 => {
+                    // 8XY0: VX = VY (just simple copy)
+                    self.v[x] = self.v[y];
+                }
+                0x1 => {
+                    // 8XY1: VX = VX OR VY
+                    self.v[x] |= self.v[y];
+                }
+                0x2 => {
+                    // 8XY2: VX = VX AND VY
+                    self.v[x] &= self.v[y];
+                }
+                0x3 => {
+                    // 8XY3: VX = VX XOR VY
+                    self.v[x] ^= self.v[y];
+                }
+                0x4 => {
+                    // 8XY4: VX += VY, VF = 1 if overflowed past 255 else 0
+                    let (result, overflowed) = self.v[x].overflowing_add(self.v[y]);
+                    self.v[x] = result;
+                    self.v[0xF] = overflowed as u8;
+                }
+                0x5 => {
+                    // 8XY5: VX -= VY, VF = 1 if NO borrow occurred (VX >= VY) else 0
+                    let (result, borrowed) = self.v[x].overflowing_sub(self.v[y]);
+                    self.v[x] = result;
+                    self.v[0xF] = !borrowed as u8; // inverted
+                }
+                0x6 => {
+                    // 8XY6: shift VX right by 1 | VF = bit that got shifted out
+                    let shifted_out_bit = self.v[x] & 0x1;
+                    self.v[x] >>= 1;
+                    self.v[0xF] = shifted_out_bit;
+                }
+                0x7 => {
+                    // 8XY7: VX = VY - VX same VF rule
+                    let (result, borrowed) = self.v[y].overflowing_sub(self.v[x]);
+                    self.v[x] = result;
+                    self.v[0xF] = !borrowed as u8;
+                }
+                0xE => {
+                    // 8XYE: shift VX left by 1 | same VF rule as 8XY6
+                    let shifted_out_bit = (self.v[x] & 0x80) >> 7;
+                    self.v[x] <<= 1;
+                    self.v[0xF] = shifted_out_bit;
+                }
+                _ => {
+                    println!("Unimplemented 0x8000 family opcode: {opcode:#06X}");
+                }
+            },
             0x9000 => {
                 // 9XY0: skip if VX != VY
-                let y = ((opcode & 0x00F0) >> 4) as usize;
-                if self.v[x] != self.v[y] { self.pc += 2; }
+                if self.v[x] != self.v[y] {
+                    self.pc += 2;
+                }
             }
             0xA000 => {
                 // ANNN: set idx reg I to addr NNN
