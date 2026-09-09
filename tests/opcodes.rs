@@ -1,4 +1,4 @@
-use chip8::cpu::Cpu;
+use chip8::{cpu::Cpu, memory::FONT_START};
 
 #[test]
 fn opcode_00ee_returns_to_saved_addr() {
@@ -205,6 +205,68 @@ fn opcode_fx18_sets_sound_timer_from_register() {
     cpu.v[0] = 30;
     cpu.execute(0xF018);
     assert_eq!(cpu.sound_timer, 30);
+}
+
+#[test]
+fn opcode_fx1e_adds_to_index_register () {
+    let mut cpu = Cpu::new();
+    cpu.i = 0x100;
+    cpu.v[0] = 0x10;
+    cpu.execute(0xF01E);
+    assert_eq!(cpu.i, 0x110);
+}
+
+#[test]
+fn opcode_fx29_points_to_correct_font_character() {
+    let mut cpu = Cpu::new();
+    cpu.v[0] = 0x0; // char 0
+    cpu.execute(0xF029);
+    assert_eq!(cpu.i, FONT_START as u16);
+
+    cpu.v[1] = 0x2; // char 2
+    cpu.execute(0xF129);
+    assert_eq!(cpu.i, (FONT_START + 10) as u16);
+}
+
+
+#[test]
+fn opcode_fx33_splits_value_into_decimal_digits() {
+    let mut cpu = Cpu::new();
+    cpu.v[0] = 137;
+    cpu.i = 0x300;
+    cpu.execute(0xF033);
+
+    assert_eq!(cpu.memory.read(0x300), 1);
+    assert_eq!(cpu.memory.read(0x300), 1);
+    assert_eq!(cpu.memory.read(0x300), 1);
+}
+
+#[test]
+fn opcode_fx55_stores_registers_to_memory() {
+    let mut cpu = Cpu::new();
+    cpu.v[0] = 10;
+    cpu.v[1] = 20;
+    cpu.v[2] = 30;
+    cpu.i = 0x300;
+    cpu.execute(0xF255);
+
+    assert_eq!(cpu.memory.read(0x300), 10);
+    assert_eq!(cpu.memory.read(0x301), 20);
+    assert_eq!(cpu.memory.read(0x302), 30);
+}
+
+#[test]
+fn opcode_fx65_loads_registers_from_memory() {
+    let mut cpu = Cpu::new();
+    cpu.i = 0x300;
+    cpu.memory.write(0x300, 5);
+    cpu.memory.write(0x301, 6);
+    cpu.memory.write(0x302, 7);
+    cpu.execute(0xF265);
+
+    assert_eq!(cpu.v[0], 5);
+    assert_eq!(cpu.v[1], 6);
+    assert_eq!(cpu.v[2], 7);
 }
 
 #[test]
