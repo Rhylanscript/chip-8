@@ -1,4 +1,5 @@
 use std::fs;
+use std::time::{Duration, Instant};
 
 use chip8::cpu::Cpu;
 use chip8::display::{HEIGHT, WIDTH};
@@ -18,20 +19,25 @@ fn main() {
     )
     .expect("failed to create window");
 
+    let timer_interval = Duration::from_secs_f64(1.0 / 60.0);
+    let mut last_timer_tick = Instant::now();
+
+    let cycles_per_frame = 700 / 60;
+
     while window.is_open() && !window.is_key_down(Key::Escape) {
-        // Run a handful of CPU cycles per frame. This is a rough
-        // approximation for now — we'll tune real timing in Milestone 5.
-        for _ in 0..10 {
+        for _ in 0..cycles_per_frame {
             cpu.cycle();
         }
 
-        // Convert our bool pixel array into the u32 color format
-        // minifb expects, scaling each Chip-8 pixel up into a 10x10
-        // block of actual window pixels.
+        if last_timer_tick.elapsed() >= timer_interval {
+            cpu.tick_timers();
+            last_timer_tick = Instant::now();
+        }
+
         let mut buffer = vec![0u32; WIDTH * 10 * HEIGHT * 10];
         for y in 0..HEIGHT {
             for x in 0..WIDTH {
-                let color = if cpu.display.pixels[y * WIDTH + x] {
+                let colour = if cpu.display.pixels[y * WIDTH + x] {
                     0x00FFFFFF // white
                 } else {
                     0x00000000 // black
@@ -40,7 +46,7 @@ fn main() {
                     for dx in 0..10 {
                         let real_x = x * 10 + dx;
                         let real_y = y * 10 + dy;
-                        buffer[real_y * (WIDTH * 10) + real_x] = color;
+                        buffer[real_y * (WIDTH * 10) + real_x] = colour;
                     }
                 }
             }

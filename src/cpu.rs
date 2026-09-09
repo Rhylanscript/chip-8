@@ -41,4 +41,13 @@ impl Cpu {
 
         self.execute(opcode);
     }
+
+    pub fn tick_timers(&mut self) {
+        if self.delay_timer > 0 {
+            self.delay_timer = self.delay_timer.saturating_sub(1);
+        }
+        if self.sound_timer > 0 {
+            self.sound_timer = self.sound_timer.saturating_sub(1);
+        }
+    }
 }
