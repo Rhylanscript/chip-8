@@ -1,10 +1,33 @@
 use chip8::cpu::Cpu;
 
 #[test]
+fn opcode_00ee_returns_to_saved_addr() {
+    let mut cpu = Cpu::new();
+    let original_pc = cpu.pc;
+
+    cpu.execute(0x2300);
+    cpu.execute(0x00EE);
+
+    assert_eq!(cpu.pc, original_pc);
+    assert_eq!(cpu.sp, 0);
+}
+
+#[test]
 fn opcode_1nnn_jumps_pc() {
     let mut cpu = Cpu::new();
     cpu.execute(0x1300);
     assert_eq!(cpu.pc, 0x300);
+}
+
+#[test]
+fn opcode_2nnn_calls_subroutine_and_saves_return_address() {
+    let mut cpu = Cpu::new();
+    let original_pc = cpu.pc;
+    cpu.execute(0x2300);
+
+    assert_eq!(cpu.pc, 0x300);
+    assert_eq!(cpu.sp, 1);
+    assert_eq!(cpu.stack[0], original_pc);
 }
 
 #[test]
@@ -158,4 +181,24 @@ fn opcode_annn_sets_index_register() {
     let mut cpu = Cpu::new();
     cpu.execute(0xA123);
     assert_eq!(cpu.i, 0x123);
+}
+
+#[test]
+fn nested_calls_use_stack_correctly() {
+    let mut cpu = Cpu::new();
+    let start = cpu.pc;
+
+    cpu.execute(0x2300);
+    let after_first_call = cpu.pc;
+    cpu.execute(0x2400);
+
+    assert_eq!(cpu.sp, 2);
+    assert_eq!(cpu.stack[1], after_first_call);
+
+    cpu.execute(0x00EE);
+    assert_eq!(cpu.pc, after_first_call);
+
+    cpu.execute(0x00EE);
+    assert_eq!(cpu.pc, start);
+    assert_eq!(cpu.sp, 0);
 }
