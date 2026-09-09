@@ -9,7 +9,7 @@ pub struct Cpu {
     pub stack: [u16; 16],
     pub delay_timer: u8,
     pub sound_timer: u8,
-    pub memory: Memory
+    pub memory: Memory,
 }
 
 #[allow(dead_code)]
@@ -23,11 +23,19 @@ impl Cpu {
             stack: [0; 16],
             delay_timer: 0,
             sound_timer: 0,
-            memory: Memory::new()
+            memory: Memory::new(),
         }
     }
 
     pub fn load_rom(&mut self, rom_data: &[u8]) {
         self.memory.load_rom(rom_data);
+    }
+
+    pub fn cycle(&mut self) {
+        let high_byte = self.memory.read(self.pc as usize);
+        let low_byte = self.memory.read(self.pc as usize + 1);
+        let opcode = ((high_byte as u16) << 8) | (low_byte as u16);
+
+        self.execute(opcode);
     }
 }
