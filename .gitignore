@@ -1,1 +1,13 @@
+# rust stuff
 /target
+
+# ignore roms except specified ones
+roms/*.ch8  
+!roms/IBM_Logo.ch8
+
+# slop
+.DS_STORE
+Thumbs.db
+
+# private
+.private/
