@@ -1,4 +1,4 @@
-use crate::cpu::Cpu;
+use crate::{cpu::Cpu, memory::FONT_START};
 
 impl Cpu {
     pub fn execute(&mut self, opcode: u16) {
@@ -144,6 +144,38 @@ impl Cpu {
                 0x18 => {
                     // FX18: sound timer = VX
                     self.sound_timer = self.v[x];
+                }
+                0x1E => {
+                    // FX1E: I += VX
+                    self.i = self.i.wrapping_add(self.v[x] as u16);
+                }
+                0x29 => {
+                    // FX29: I = addr of font sprite for digit VX
+                    // FONT_START + (N * 5)
+                    self.i = (FONT_START + (self.v[x] as usize * 5)) as u16;
+                }
+                0x33 => {
+                    // FX33: split VX into hundreds/tens/ones
+                    let value = self.v[x];
+                    let hundreds = value / 100;
+                    let tens = (value / 10) % 10;
+                    let ones = value % 10;
+
+                    self.memory.write(self.i as usize, hundreds);
+                    self.memory.write(self.i as usize + 1, tens);
+                    self.memory.write(self.i as usize + 2, ones);
+                }
+                0x55 => {
+                    // FX55: store V0..=VX into memory starting at I
+                    for offset in 0..=x {
+                        self.memory.write(self.i as usize + offset, self.v[offset]);
+                    }
+                }
+                0x65 => {
+                    // FX65: load memory starting at I into V0..=VX
+                    for offset in 0..=x {
+                        self.v[offset] = self.memory.read(self.i as usize + offset);
+                    }
                 }
                 _ => {
                     println!("Unimplemented 0xF000-family opcode: {opcode:#06X}");
