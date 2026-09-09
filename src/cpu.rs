@@ -9,7 +9,7 @@ pub struct Cpu {
     pub stack: [u16; 16],
     pub delay_timer: u8,
     pub sound_timer: u8,
-    pub memory: Memory
+    pub memory: Memory,
 }
 
 #[allow(dead_code)]
@@ -23,7 +23,7 @@ impl Cpu {
             stack: [0; 16],
             delay_timer: 0,
             sound_timer: 0,
-            memory: Memory::new()
+            memory: Memory::new(),
         }
     }
 
