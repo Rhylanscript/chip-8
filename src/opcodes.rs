@@ -18,6 +18,19 @@ impl Cpu {
                 self.pc = nnn;
                 return;
             }
+            0x3000 => {
+                // 3XNN: skip if VX == NN
+                if self.v[x] == nn { self.pc += 2; }
+            }
+            0x4000 => {
+                // 4XNN: skip if VX != NN
+                if self.v[x] != nn { self.pc += 2; }
+            }
+            0x5000 => {
+                // 5XY0: skip if VX == VY
+                let y = ((opcode & 0x00F0) >> 4) as usize;
+                if self.v[x] == self.v[y] { self.pc += 2; }
+            }
             0x6000 => {
                 // 6XNN: set reg VX to NN
                 self.v[x] = nn;
@@ -25,6 +38,11 @@ impl Cpu {
             0x7000 => {
                 // 7XNN: add NN to reg VX
                 self.v[x] = self.v[x].wrapping_add(nn);
+            }
+            0x9000 => {
+                // 9XY0: skip if VX != VY
+                let y = ((opcode & 0x00F0) >> 4) as usize;
+                if self.v[x] != self.v[y] { self.pc += 2; }
             }
             0xA000 => {
                 // ANNN: set idx reg I to addr NNN
