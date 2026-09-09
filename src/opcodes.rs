@@ -12,10 +12,22 @@ impl Cpu {
                 if opcode == 0x00E0 {
                     // 00E0: clear screen
                     self.display.clear();
+                } else if opcode == 0x00EE {
+                    // 00EE: return from subroutine
+                    self.sp -= 1;
+                    self.pc = self.stack[self.sp as usize];
+                    return;
                 }
             }
             0x1000 => {
                 // 1NNN: goto addr NNN
+                self.pc = nnn;
+                return;
+            }
+            0x2000 => {
+                // 2NNN: call subroutine at addr NNN
+                self.stack[self.sp as usize] = self.pc;
+                self.sp += 1;
                 self.pc = nnn;
                 return;
             }
