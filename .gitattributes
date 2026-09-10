@@ -1,0 +1,13 @@
+# handle line endings for text files
+* text=auto
+
+# text files
+*.rs text
+*.toml text
+*.lock text
+*.md text
+
+# binary files
+*.png binary
+*.jpg binary
+*.ch8 binary

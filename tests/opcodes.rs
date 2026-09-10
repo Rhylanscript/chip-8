@@ -184,11 +184,50 @@ fn opcode_annn_sets_index_register() {
 }
 
 #[test]
+fn opcode_ex9e_skips_when_key_held() {
+    let mut cpu = Cpu::new();
+    cpu.v[0] = 5;
+    cpu.input.keys[5] = true; // manually simulate key 5 being held
+    let pc_before = cpu.pc;
+    cpu.execute(0xE09E);
+    assert_eq!(cpu.pc, pc_before + 4); // skipped
+}
+
+#[test]
+fn opcode_exa1_skips_when_key_not_held() {
+    let mut cpu = Cpu::new();
+    cpu.v[0] = 5;
+    // key 5 left as false (not held)
+    let pc_before = cpu.pc;
+    cpu.execute(0xE0A1);
+    assert_eq!(cpu.pc, pc_before + 4); // skipped, since key is NOT held
+}
+
+#[test]
 fn opcode_fx07_reads_delay_timer_into_register() {
     let mut cpu = Cpu::new();
     cpu.delay_timer = 42;
     cpu.execute(0xF007);
     assert_eq!(cpu.v[0], 42);
+}
+
+#[test]
+fn opcode_fx0a_blocks_when_no_key_pressed() {
+    let mut cpu = Cpu::new();
+    let pc_before = cpu.pc;
+    cpu.execute(0xF00A); // no keys held at all
+    assert_eq!(cpu.pc, pc_before); // pc did NOT move — we're "blocked"
+}
+
+#[test]
+fn opcode_fx0a_captures_key_and_advances_when_pressed() {
+    let mut cpu = Cpu::new();
+    cpu.input.keys[7] = true; // simulate key 7 held
+    let pc_before = cpu.pc;
+    cpu.execute(0xF00A);
+
+    assert_eq!(cpu.v[0], 7); // captured which key was pressed
+    assert_eq!(cpu.pc, pc_before + 2); // advanced normally, no longer blocked
 }
 
 #[test]
@@ -208,7 +247,7 @@ fn opcode_fx18_sets_sound_timer_from_register() {
 }
 
 #[test]
-fn opcode_fx1e_adds_to_index_register () {
+fn opcode_fx1e_adds_to_index_register() {
     let mut cpu = Cpu::new();
     cpu.i = 0x100;
     cpu.v[0] = 0x10;
@@ -227,7 +266,6 @@ fn opcode_fx29_points_to_correct_font_character() {
     cpu.execute(0xF129);
     assert_eq!(cpu.i, (FONT_START + 10) as u16);
 }
-
 
 #[test]
 fn opcode_fx33_splits_value_into_decimal_digits() {

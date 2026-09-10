@@ -25,6 +25,8 @@ fn main() {
     let cycles_per_frame = 700 / 60;
 
     while window.is_open() && !window.is_key_down(Key::Escape) {
+        cpu.input.update(&window);
+
         for _ in 0..cycles_per_frame {
             cpu.cycle();
         }
