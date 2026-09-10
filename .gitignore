@@ -2,7 +2,8 @@
 /target
 
 # ignore roms except specified ones
-roms/*.ch8  
+roms/*.ch8
+roms/*.rom
 !roms/IBM_Logo.ch8
 
 # slop
