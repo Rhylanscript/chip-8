@@ -1,4 +1,5 @@
-use crate::{cpu::Cpu, memory::FONT_START};
+use crate::cpu::Cpu;
+use crate::memory::FONT_START;
 
 impl Cpu {
     pub fn execute(&mut self, opcode: u16) {
@@ -132,10 +133,41 @@ impl Cpu {
                 let collision = self.display.draw_sprite(vx, vy, &sprite_data);
                 self.v[0xF] = collision as u8;
             }
+            0xE000 => match opcode & 0x00FF {
+                0x9E => {
+                    // EX9E: skip next instruction if key in VX is currently held down
+                    if self.input.is_key_down(self.v[x] as usize) {
+                        self.pc += 2;
+                    }
+                }
+                0xA1 => {
+                    // EXA1: skip next instruction if key in VX isnt held down
+                    if !self.input.is_key_down(self.v[x] as usize) {
+                        self.pc += 2;
+                    }
+                }
+                _ => {
+                    println!("Unimplemented 0xE000-family opcode: {opcode:#06X}");
+                }
+            },
             0xF000 => match opcode & 0x00FF {
                 0x07 => {
                     // FX07: VX = current delay timer value
                     self.v[x] = self.delay_timer;
+                }
+                0x0A => {
+                    // FX0A: block until any key is pressed then store in VX
+                    let mut key_pressed = false;
+                    for key in 0..16 {
+                        if self.input.is_key_down(key) {
+                            self.v[x] = key as u8;
+                            key_pressed = true;
+                            break;
+                        }
+                    }
+                    if !key_pressed {
+                        return;
+                    }
                 }
                 0x15 => {
                     // FX15: delay timer = VX

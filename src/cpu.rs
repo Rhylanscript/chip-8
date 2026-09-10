@@ -1,4 +1,5 @@
 use crate::display::Display;
+use crate::input::Input;
 use crate::memory::{Memory, PROGRAM_START};
 
 #[allow(dead_code)]
@@ -12,6 +13,7 @@ pub struct Cpu {
     pub sound_timer: u8,
     pub memory: Memory,
     pub display: Display,
+    pub input: Input,
 }
 
 #[allow(dead_code)]
@@ -27,6 +29,7 @@ impl Cpu {
             sound_timer: 0,
             memory: Memory::new(),
             display: Display::new(),
+            input: Input::new(),
         }
     }
 

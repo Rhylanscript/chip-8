@@ -208,7 +208,7 @@ fn opcode_fx18_sets_sound_timer_from_register() {
 }
 
 #[test]
-fn opcode_fx1e_adds_to_index_register () {
+fn opcode_fx1e_adds_to_index_register() {
     let mut cpu = Cpu::new();
     cpu.i = 0x100;
     cpu.v[0] = 0x10;
@@ -227,7 +227,6 @@ fn opcode_fx29_points_to_correct_font_character() {
     cpu.execute(0xF129);
     assert_eq!(cpu.i, (FONT_START + 10) as u16);
 }
-
 
 #[test]
 fn opcode_fx33_splits_value_into_decimal_digits() {
